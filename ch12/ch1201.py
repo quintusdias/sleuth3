@@ -25,22 +25,31 @@ formula = 'SAT ~ logTakers + Rank'
 model = smf.ols(formula=formula, data=df).fit()
 print(model.summary())
 
+# partial residual plots
+# different from partial regression plots
+fig, ax = plt.subplots(ncols=2, sharex=True, sharey=True)
+model = smf.ols(formula='SAT ~ logTakers + Rank + Expend', data=df).fit()
+sm.graphics.plot_ccpr(model, 'Expend', ax=ax[0])
 
-# Match the plot in the book
-formula = 'SAT ~ logTakers + Rank + Expend'
-
-model1 = smf.ols(formula=formula, data=df).fit()
-x1, y1 = df['Expend'], model1.resid + model1.params['Expend'] * df['Expend']
-
-df2 = df.query('State != "Alaska"')
-model2 = smf.ols(formula=formula, data=df2).fit()
-x2, y2 = df2['Expend'], model2.resid + model2.params['Expend'] * df2['Expend']
+model = smf.ols(formula='SAT ~ logTakers + Rank + Expend', data=df.query('Expend < 40')).fit()
+sm.graphics.plot_ccpr(model, 'Expend', ax=ax[1])
 
 
-fig, ax = plt.subplots()
-sns.scatterplot(x=x1, y=y1, ax=ax)
-sns.scatterplot(x=x2, y=y2, ax=ax)
+# partial residual plots
+# public schools
+fig, ax = plt.subplots(ncols=2, sharex=True, sharey=True)
+model = smf.ols(formula='SAT ~ logTakers + Rank + Public', data=df).fit()
+sm.graphics.plot_ccpr(model, 'Public', ax=ax[0])
+ax[0].set_title('With Louisiana')
+ax[0].set_ylabel('Partial Residual')
+ax[0].set_xlabel('')
 
-ax.set_ylabel('Partial Residual')
-ax.set_xlabel('Expenditure ($100s per student)')
+model = smf.ols(formula='SAT ~ logTakers + Rank + Public', data=df.query('Public > 50')).fit()
+sm.graphics.plot_ccpr(model, 'Public', ax=ax[1])
+ax[1].set_title('Without Louisiana')
+ax[1].set_ylabel('')
+ax[1].set_xlabel('')
 
+fig.suptitle('CCPR (partial residual plots)')
+fig.supxlabel('Test Taker Percentage in Public Schools')
+fig.tight_layout()
